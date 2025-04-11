@@ -1,161 +1,98 @@
+
 class Player {
-    constructor(name, team) {
+    constructor(name) {
         this.name = name;
         this.score = 0;
-        this.team = team;
     }
+}
 
-    attemptShot(successRate) {
+function getSuccessRate() {
+    return 0.3 + Math.random() * 0.5;
+}
+
+function shootBalls(player, attempts) {
+    const successRate = getSuccessRate();
+    let successfulShots = 0;
+    
+    for (let i = 0; i < attempts; i++) {
         if (Math.random() < successRate) {
-            this.score += 3; // 3 points for a successful shot
+            successfulShots++;
         }
     }
-}
-
-function generateSuccessRate() {
-    return Math.random();
-}
-
-function playRound(players, attempts) {
-    players.forEach(player => {
-        const successRate = generateSuccessRate();
-        for (let i = 0; i < attempts; i++) {
-            player.attemptShot(successRate);
-        }
-    });
+    
+    player.score += successfulShots;
+    console.log(`${player.name} scored ${successfulShots} successful shots.`);
+    return successfulShots;
 }
 
 function rankPlayers(players) {
-    return players.sort((a, b) => b.score - a.score);
+    return players.slice().sort((a, b) => b.score - a.score);
 }
 
 function displayRankings(players) {
-    const rankingsList = document.getElementById('rankings-list');
-    rankingsList.innerHTML = '';
-    players.forEach((player, index) => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `${index + 1}. ${player.name} - ${player.score} points`;
-        rankingsList.appendChild(listItem);
+    const rankings = rankPlayers(players);
+    console.log("\n🏆 Rankings after this round:");
+    rankings.forEach((player, index) => {
+        const medal = index === 0 ? "🥇" : 
+                      index === 1 ? "🥈" : 
+                      index === 2 ? "🥉" : " ";
+        console.log(`${index + 1}. ${player.name} - ${player.score} points ${medal}`);
     });
+    return rankings;
 }
 
-function tieBreaker(players, attempts) {
-    const tiebreakerMessage = document.getElementById('tiebreaker-message');
-    tiebreakerMessage.textContent = `Tiebreaker needed between: ${players.map(p => p.name).join(', ')}`;
+function checkForTies(rankedPlayers) {
+    if (rankedPlayers.length < 2) return false;
+    return rankedPlayers[0].score === rankedPlayers[1].score;
+}
+
+function getTiedPlayersNames(rankedPlayers) {
+    const topScore = rankedPlayers[0].score;
+    const tiedPlayers = rankedPlayers.filter(player => player.score === topScore);
+    return tiedPlayers.map(p => p.name).join(', ');
+}
+
+function playBasketballGame() {
+    console.log("🏀 Basketball Shooting Championship 🏀");
     
-    const round2Message = document.getElementById('round2-message');
-    round2Message.textContent = 'Round 2 Begins!';
+    const players = [
+        new Player("James"),
+        new Player("Curry"),
+        new Player("Jordan"),
+        new Player("Bryant"),
+        new Player("Durant")
+    ];
     
-    players.forEach(player => player.score = 0);
-    playRound(players, attempts);
+    const attemptsPerRound = 5;
+    let round = 1;
     
-    const tiebreakerResults = document.getElementById('tiebreaker-results');
-    tiebreakerResults.innerHTML = '';
+    console.log("\n🏀 Round 1 Begins!");
     players.forEach(player => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `${player.name} scored ${player.score} successful shots.`;
-        tiebreakerResults.appendChild(listItem);
+        shootBalls(player, attemptsPerRound);
     });
+    
+    const rankings = displayRankings(players);
+    
+    if (checkForTies(rankings)) {
+        const tiedNames = getTiedPlayersNames(rankings);
+        console.log("\n🔥 Tiebreaker needed between: " + tiedNames);
+        
 
-    displayRankings(players);
-    return rankPlayers(players)[0];
-}
+        const topScore = rankings[0].score;
+        const tiedPlayers = rankings.filter(player => player.score === topScore);
+        tiedPlayers.forEach(player => player.score = 0);
+        
+        console.log("\n🏀 Round 2 Begins!");
+        tiedPlayers.forEach(player => {
+            shootBalls(player, attemptsPerRound);
+        });
 
-function determineChampion(players) {
-    const championMessage = document.getElementById('champion-message');
-    let rankedPlayers = rankPlayers(players);
-
-    if (rankedPlayers[0].score === rankedPlayers[1].score) {
-        let tiedPlayers = rankedPlayers.filter(p => p.score === rankedPlayers[0].score);
-        let winner = tieBreaker(tiedPlayers, 3);
-        championMessage.textContent = `The champion is ${winner.name} with ${winner.score} points!`;
+        const finalRankings = displayRankings(players);
+        console.log("\n🏆 The champion is " + finalRankings[0].name + 
+                    " with " + finalRankings[0].score + " points! 🏆");
     } else {
-        championMessage.textContent = `The champion is ${rankedPlayers[0].name} with ${rankedPlayers[0].score} points!`;
+        console.log("\n🏆 The champion is " + rankings[0].name + 
+                    " with " + rankings[0].score + " points! 🏆");
     }
 }
-
-const app = document.getElementById("app");
-
-const container = document.createElement("div");
-container.id = "main";
-container.classList.add("container");
-app.append(container);
-
-const header = document.createElement("h2");
-header.textContent = "Basketball Game"
-container.append(header);
-
-const rankingsList = document.createElement("ul");
-rankingsList.id = "rankings-list";
-rankingsList.classList.add("list-group", "pt-3", "pb-2");
-container.append(rankingsList);
-
-const tiebreakerMessage = document.createElement("p");
-tiebreakerMessage.id = "tiebreaker-message";
-container.append(tiebreakerMessage);
-
-const round2Message = document.createElement("p");
-round2Message.id = "round2-message";
-container.append(round2Message);
-
-const tiebreakerResults = document.createElement("ul");
-tiebreakerResults.id = "tiebreaker-results";
-tiebreakerResults.classList.add("list-group", "pt-3", "pb-2");
-container.append(tiebreakerResults);
-
-const championMessage = document.createElement("p");
-championMessage.id = "champion-message";
-container.append(championMessage);
-
-const controls = document.createElement("div");
-controls.classList.add("input-group");
-container.append(controls);
-
-const playerNameInput = document.createElement("input");
-playerNameInput.id = "player-name-input";
-playerNameInput.classList.add("form-control");
-playerNameInput.placeholder = "Add Player";
-controls.append(playerNameInput);
-
-const addPlayerButton = document.createElement("button");
-addPlayerButton.id = "add-player-button";
-addPlayerButton.classList.add("btn", "btn-outline-primary");
-addPlayerButton.style.backgroundColor = '#b5ffff'; // added custom background color
-addPlayerButton.textContent = "Add Player";
-addPlayerButton.addEventListener("click", () => {
-    const playerName = playerNameInput.value;
-    if (playerName) {
-        const playerList = document.getElementById('player-list');
-        const listItem = document.createElement('li');
-        listItem.textContent = playerName;
-        playerList.appendChild(listItem);
-        playerNameInput.value = '';
-    }
-});
-controls.append(addPlayerButton);
-
-const playerList = document.createElement("ul");
-playerList.id = "player-list";
-playerList.classList.add("list-group", "pt-3", "pb-2");
-container.append(playerList);
-
-const attemptsInput = document.createElement("input");
-attemptsInput.id = "attempts-input";
-attemptsInput.classList.add("form-control");
-attemptsInput.type = "number";
-attemptsInput.value = 5;
-controls.append(attemptsInput);
-
-const playButton = document.createElement("button");
-playButton.id = "play-button";
-playButton.classList.add("btn", "btn-outline-primary"); // changed from btn-outline-primary to btn-primary
-playButton.style.backgroundColor = '#b5ffff'; // added custom background color
-playButton.textContent = "Play";
-playButton.addEventListener("click", () => {
-    const players = Array.from(document.getElementById('player-list').children).map(player => new Player(player.textContent, ''));
-    const attempts = parseInt(attemptsInput.value);
-    playRound(players, attempts);
-    displayRankings(players);
-    determineChampion(players);
-});
-controls.append(playButton);
+playBasketballGame();
