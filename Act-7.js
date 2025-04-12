@@ -1,4 +1,3 @@
-
 class Player {
     constructor(name) {
         this.name = name;
@@ -46,10 +45,9 @@ function checkForTies(rankedPlayers) {
     return rankedPlayers[0].score === rankedPlayers[1].score;
 }
 
-function getTiedPlayersNames(rankedPlayers) {
+function getTiedPlayers(rankedPlayers) {
     const topScore = rankedPlayers[0].score;
-    const tiedPlayers = rankedPlayers.filter(player => player.score === topScore);
-    return tiedPlayers.map(p => p.name).join(', ');
+    return rankedPlayers.filter(player => player.score === topScore);
 }
 
 function playBasketballGame() {
@@ -65,34 +63,29 @@ function playBasketballGame() {
     
     const attemptsPerRound = 5;
     let round = 1;
+    let currentPlayers = players;
     
-    console.log("\n🏀 Round 1 Begins!");
-    players.forEach(player => {
-        shootBalls(player, attemptsPerRound);
-    });
-    
-    const rankings = displayRankings(players);
-    
-    if (checkForTies(rankings)) {
-        const tiedNames = getTiedPlayersNames(rankings);
-        console.log("\n🔥 Tiebreaker needed between: " + tiedNames);
-        
-
-        const topScore = rankings[0].score;
-        const tiedPlayers = rankings.filter(player => player.score === topScore);
-        tiedPlayers.forEach(player => player.score = 0);
-        
-        console.log("\n🏀 Round 2 Begins!");
-        tiedPlayers.forEach(player => {
+    while (true) {
+        console.log(`\n🏀 Round ${round} Begins!`);
+        currentPlayers.forEach(player => {
             shootBalls(player, attemptsPerRound);
         });
-
-        const finalRankings = displayRankings(players);
-        console.log("\n🏆 The champion is " + finalRankings[0].name + 
-                    " with " + finalRankings[0].score + " points! 🏆");
-    } else {
-        console.log("\n🏆 The champion is " + rankings[0].name + 
-                    " with " + rankings[0].score + " points! 🏆");
+        
+        const rankings = displayRankings(players);
+        
+        if (!checkForTies(rankings)) {
+            console.log(`\n🏆 The champion is ${rankings[0].name} with ${rankings[0].score} points! 🏆`);
+            break;
+        }
+        
+        const tiedPlayers = getTiedPlayers(rankings);
+        const tiedNames = tiedPlayers.map(p => p.name).join(', ');
+        console.log(`\n🔥 Tiebreaker needed between: ${tiedNames}`);
+        
+        tiedPlayers.forEach(player => player.score = 0);
+        currentPlayers = tiedPlayers;
+        round++;
     }
 }
+
 playBasketballGame();
